@@ -32,10 +32,20 @@ function loadStats() {
 
 function recordWin(tier, ms, clean) {
   const s = loadStats();
-  const t = s[tier] || { solved: 0, clean: 0, streak: 0, bestMs: null };
+  const t = s[tier] || { solved: 0, clean: 0, streak: 0, bestMs: null, cold: 0 };
   t.solved++;
   if (clean) { t.clean++; t.streak++; } else { t.streak = 0; }
   if (t.bestMs === null || ms < t.bestMs) t.bestMs = ms;
+  s[tier] = t;
+  try { localStorage.setItem('cellmates-stats', JSON.stringify(s)); } catch { /* private mode */ }
+  return t;
+}
+
+function recordCold(tier) {
+  const s = loadStats();
+  const t = s[tier] || { solved: 0, clean: 0, streak: 0, bestMs: null, cold: 0 };
+  t.cold = (t.cold || 0) + 1;
+  t.streak = 0;
   s[tier] = t;
   try { localStorage.setItem('cellmates-stats', JSON.stringify(s)); } catch { /* private mode */ }
   return t;
@@ -211,7 +221,7 @@ function submit() {
     <p class="meta">${game.puzzle.tierName} &middot; case ${game.puzzle.seed} &middot; out in ${fmtTime(ms)}
     ${clean ? '&middot; CLEAN ESCAPE' : `&middot; ${game.wrong} denied attempt${game.wrong === 1 ? '' : 's'}`}<br>
     tier record: ${t.solved} escaped &middot; ${t.clean} clean &middot; streak ${t.streak}
-    &middot; best ${fmtTime(t.bestMs)}</p>
+    &middot; best ${fmtTime(t.bestMs)} &middot; ${t.cold || 0} cold</p>
     <div class="btns">
       <button id="shareBtn">Copy brag sheet</button>
       <button id="againBtn">New case</button>
@@ -223,6 +233,43 @@ function submit() {
       .catch(() => { $id('shareBtn').textContent = txt; });
   };
   $id('againBtn').onclick = () => newCase($id('tierSelect').value);
+}
+
+/* ---------- giving up ---------- */
+
+function giveUp() {
+  if (game.done || !game.puzzle) return;
+  showSheet(`<div class="stamp">GIVE UP?</div>
+    <p class="meta">The answer is revealed, the case goes cold, and your streak resets.<br>
+    There is no way back into this one.</p>
+    <div class="btns">
+      <button id="stayBtn">Keep working</button>
+      <button id="coldBtn">Reveal the answer</button>
+    </div>`);
+  $id('stayBtn').onclick = hideSheet;
+  $id('coldBtn').onclick = () => {
+    game.done = true;
+    clearInterval(game.timerId);
+    const t = recordCold(game.puzzle.tier);
+    // Write the answer onto the cards so the reports can be studied against it.
+    game.puzzle.solution.forEach((w, i) => {
+      document.querySelectorAll(`.slot[data-i="${i}"]`).forEach((s, k) => {
+        s.value = w[k].toUpperCase();
+      });
+    });
+    const mugs = game.puzzle.solution.map((w, i) =>
+      `<span class="mug"><span class="n">NO. ${i + 1}</span><br><span class="w">${w.toUpperCase()}</span></span>`).join('');
+    showSheet(`<div class="stamp">COLD CASE</div>
+      <div class="reveal">${mugs}</div>
+      <p class="meta">The inmates walked. ${game.puzzle.tierName} &middot; case ${game.puzzle.seed}<br>
+      tier record: ${t.solved} escaped &middot; ${t.cold} cold &middot; streak reset</p>
+      <div class="btns">
+        <button id="studyBtn">Study the file</button>
+        <button id="againBtn">New case</button>
+      </div>`);
+    $id('studyBtn').onclick = hideSheet;
+    $id('againBtn').onclick = () => newCase($id('tierSelect').value);
+  };
 }
 
 /* ---------- wiring ---------- */
@@ -238,6 +285,7 @@ function wire() {
 
   $id('newBtn').onclick = () => newCase(tierSel.value);
   $id('submitBtn').onclick = submit;
+  $id('giveupBtn').onclick = giveUp;
 
   $id('seedBtn').onclick = () => $id('seedForm').classList.toggle('open');
   $id('seedGo').onclick = () => {
