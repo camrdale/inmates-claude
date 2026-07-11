@@ -502,10 +502,13 @@ button { cursor: pointer; }
 
 .keypad[hidden] { display: none; }
 
-.key {
+.dock .key {
   min-width: 46px;
   height: 48px;
   flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  line-height: 1;
   font-family: var(--display);
   font-size: 21px;
   color: #cfd9e6;
@@ -516,9 +519,9 @@ button { cursor: pointer; }
   padding: 0;
 }
 
-.key:active { background: var(--amber); border-color: var(--amber); color: #241a03; }
+.dock .key:active { background: var(--amber); border-color: var(--amber); color: #241a03; }
 
-.key-back { min-width: 64px; font-family: var(--ui); font-size: 18px; }
+.dock .key-back { min-width: 64px; font-family: var(--ui); font-size: 18px; }
 
 .dock input[type="text"], .dock select {
   background: var(--night-2);
@@ -725,6 +728,6 @@ button { cursor: pointer; }
 
   /* Keypad: one row, keys share the width equally. */
   .keypad { flex-wrap: nowrap; gap: 4px; padding-bottom: 3px; }
-  .key { min-width: 0; flex: 1 1 0; height: 42px; font-size: 17px; }
-  .key-back { flex: 1.4 1 0; font-size: 15px; }
+  .dock .key { min-width: 0; flex: 1 1 0; height: 42px; font-size: 17px; }
+  .dock .key-back { flex: 1.4 1 0; font-size: 15px; }
 }
