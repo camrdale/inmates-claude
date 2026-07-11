@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cellmates</title>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!-- BODY-START -->
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <h1>CELLMATES</h1>
+      <div class="tagline">cell block D &middot; identify every inmate &middot; pure deduction</div>
+    </div>
+    <div class="hud">
+      <span id="tierBadge" class="badge">&mdash;</span>
+      <span id="secBadge" class="badge sec" title="Security level (measured difficulty)">&mdash;</span>
+      <span id="timer" class="timer">0:00</span>
+      <button id="seedLine" class="seedline" title="Click to copy this case number">CASE &mdash;</button>
+    </div>
+  </header>
+
+  <section class="yard">
+    <div class="yard-label">Cell block letters &mdash; inmates use only these; each appears in at least one name</div>
+    <div id="pool" class="pool"></div>
+  </section>
+
+  <main class="board">
+    <section id="inmates" class="inmates"></section>
+    <aside class="reports">
+      <h2>Guard reports <span class="all-true">ALL TRUE</span></h2>
+      <ol id="clues"></ol>
+      <div class="rules">
+        Standing rules: every name is a common English word &middot; all names differ &middot;
+        a letter may repeat inside a name &middot; every cell block letter is used by at least one inmate.
+        Wrong submissions give no information &mdash; only logic opens the gate.
+      </div>
+    </aside>
+  </main>
+
+  <footer class="dock">
+    <div class="group">
+      <input id="checkInput" type="text" maxlength="6" placeholder="WORD CHECK" aria-label="Check whether a word is in the book">
+      <button id="checkBtn">Check the book</button>
+      <span id="checkResult"></span>
+    </div>
+    <div class="group">
+      <select id="tierSelect" aria-label="Choose security tier"></select>
+      <button id="newBtn">New case</button>
+      <button id="seedBtn">Enter case #</button>
+      <span class="seedform" id="seedForm">
+        <input id="seedInput" type="text" maxlength="10" placeholder="JAIL-XXXXX" aria-label="Case number">
+        <button id="seedGo">Open</button>
+      </span>
+      <button id="submitBtn" class="primary">Call the warden</button>
+    </div>
+  </footer>
+</div>
+
+<div id="overlay" class="overlay hidden" role="dialog" aria-modal="true"></div>
+<!-- BODY-END -->
+<script type="module" src="src/app.js"></script>
+</body>
+</html>

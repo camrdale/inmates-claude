@@ -1,0 +1,11 @@
+{
+  "name": "cellmates",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node test/harness.js",
+    "bundle": "node tools/bundle.js",
+    "serve": "python3 -m http.server 8123"
+  }
+}
