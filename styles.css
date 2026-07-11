@@ -722,4 +722,9 @@ button { cursor: pointer; }
   #dockToggle { display: inline-block; }
   #submitBtn { flex: 1; }
   #checkResult { min-width: 0; }
+
+  /* Keypad: one row, keys share the width equally. */
+  .keypad { flex-wrap: nowrap; gap: 4px; padding-bottom: 3px; }
+  .key { min-width: 0; flex: 1 1 0; height: 42px; font-size: 17px; }
+  .key-back { flex: 1.4 1 0; font-size: 15px; }
 }
