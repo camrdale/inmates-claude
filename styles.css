@@ -478,6 +478,7 @@ button { cursor: pointer; }
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  position: relative;
 }
 
 .dock input[type="text"], .dock select {
@@ -518,8 +519,29 @@ button { cursor: pointer; }
 #checkResult.ok { color: #7fc494; }
 #checkResult.no { color: #e07b6c; }
 
-.seedform { display: none; }
-.seedform.open { display: contents; }
+/* Popover above the dock: revealing it must not reflow the dock. */
+.seedform {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 16px);
+  right: 0;
+  background: linear-gradient(180deg, #232d3d, #1a2230);
+  border: 1px solid #4d5b70;
+  border-radius: 4px;
+  box-shadow: 0 12px 32px #000b;
+  padding: 10px;
+  gap: 8px;
+  z-index: 6;
+}
+.seedform.open { display: flex; }
+.seedform::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 90px;
+  border: 8px solid transparent;
+  border-top-color: #4d5b70;
+}
 
 /* ---------- overlay ---------- */
 

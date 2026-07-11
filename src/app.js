@@ -360,7 +360,19 @@ function wire() {
   $id('submitBtn').onclick = submit;
   $id('giveupBtn').onclick = giveUp;
 
-  $id('seedBtn').onclick = () => $id('seedForm').classList.toggle('open');
+  $id('seedBtn').onclick = () => {
+    const f = $id('seedForm');
+    f.classList.toggle('open');
+    if (f.classList.contains('open')) {
+      const inp = $id('seedInput');
+      inp.focus();
+      inp.select();
+    }
+  };
+  $id('seedInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') $id('seedGo').click();
+    if (e.key === 'Escape') { $id('seedForm').classList.remove('open'); e.stopPropagation(); }
+  });
   $id('seedGo').onclick = () => {
     const code = $id('seedInput').value.trim().toUpperCase();
     const m = code.match(/^(HOLD|JAIL|PRIS|ROCK)-[A-Z0-9]{5}$/);
