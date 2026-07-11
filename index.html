@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cellmates</title>
 <link rel="stylesheet" href="fonts.css">
 <link rel="stylesheet" href="styles.css">
@@ -41,7 +41,7 @@
     </aside>
   </main>
 
-  <footer class="dock">
+  <footer class="dock" id="dock">
     <div class="group">
       <input id="checkInput" type="text" maxlength="6" placeholder="WORD CHECK" aria-label="Check whether a word is in the book">
       <button id="checkBtn">Check the book</button>
@@ -56,6 +56,9 @@
         <button id="seedGo">Open</button>
       </span>
       <button id="giveupBtn">Give up</button>
+    </div>
+    <div class="dock-bar">
+      <button id="dockToggle" aria-expanded="false" aria-controls="dock">Tools</button>
       <button id="submitBtn" class="primary">Call the warden</button>
     </div>
   </footer>

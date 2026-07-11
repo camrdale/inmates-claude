@@ -28,7 +28,7 @@ const body = read('index.html').match(/<!-- BODY-START -->([\s\S]*)<!-- BODY-END
 const full = process.argv.includes('--full');
 
 const head = `<title>Cellmates</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>
 ${read('fonts.css')}
 ${read('styles.css')}

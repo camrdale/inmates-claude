@@ -112,6 +112,9 @@ function newCase(tierKey, seedCode) {
     renderPuzzle();
     startTimer();
     hideSheet();
+    // On mobile the tools tray was likely used to start this case; tuck it away.
+    $id('dock').classList.remove('open');
+    $id('dockToggle').setAttribute('aria-expanded', 'false');
   }, 60);
 }
 
@@ -359,6 +362,10 @@ function wire() {
   $id('newBtn').onclick = () => newCase(tierSel.value);
   $id('submitBtn').onclick = submit;
   $id('giveupBtn').onclick = giveUp;
+  $id('dockToggle').onclick = () => {
+    const open = $id('dock').classList.toggle('open');
+    $id('dockToggle').setAttribute('aria-expanded', String(open));
+  };
 
   $id('seedBtn').onclick = () => {
     const f = $id('seedForm');

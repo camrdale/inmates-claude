@@ -481,6 +481,14 @@ button { cursor: pointer; }
   position: relative;
 }
 
+.dock-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#dockToggle { display: none; }
+
 .dock input[type="text"], .dock select {
   background: var(--night-2);
   border: 1px solid #4d5b70;
@@ -648,8 +656,39 @@ button { cursor: pointer; }
 }
 
 @media (max-width: 640px) {
-  #app { padding: 14px 12px 150px; }
-  .slot { width: 44px; height: 50px; font-size: 26px; }
-  .pool .tile { width: 40px; height: 44px; font-size: 20px; }
-  .dock { gap: 10px; padding: 8px 10px; }
+  #app { padding: 12px 10px 96px; }
+
+  .topbar { gap: 8px; padding-bottom: 10px; }
+  .hud { gap: 6px; }
+  .badge { font-size: 11px; padding: 3px 7px 1px; }
+  .timer { font-size: 16px; min-width: 60px; padding: 2px 8px; }
+
+  .yard { margin: 12px 0 4px; }
+  .pool { gap: 6px; }
+  .pool .tile { width: 36px; height: 40px; font-size: 18px; }
+
+  .board { gap: 14px; margin-top: 12px; }
+  .inmates { gap: 12px; }
+  .card { padding: 10px 10px 12px; }
+  .slots { gap: 6px; padding: 10px 6px 8px; }
+  .slot { width: 38px; height: 44px; font-size: 22px; }
+  .marks { gap: 5px; }
+  .mark { width: 30px; height: 30px; font-size: 13px; }
+  .reports { padding: 32px 12px 12px; }
+  #clues { font-size: 14px; }
+  .sheet { padding: 24px 18px 22px; }
+
+  /* Collapsed dock: one slim bar (Tools toggle + primary action); the
+     word-check and case-control trays open on demand above it. */
+  .dock {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  }
+  .dock .group { display: none; justify-content: center; }
+  .dock.open .group { display: flex; }
+  #dockToggle { display: inline-block; }
+  #submitBtn { flex: 1; }
+  #checkResult { min-width: 0; }
 }
