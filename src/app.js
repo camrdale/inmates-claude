@@ -20,6 +20,9 @@ const game = {
   startAt: 0,
   timerId: null,
   wrong: 0,
+  checks: 0,
+  reveals: 0,
+  assisted: false,
   done: false,
 };
 
@@ -30,12 +33,18 @@ function loadStats() {
   catch { return {}; }
 }
 
-function recordWin(tier, ms, clean) {
+function recordWin(tier, ms, clean, assisted) {
   const s = loadStats();
-  const t = s[tier] || { solved: 0, clean: 0, streak: 0, bestMs: null, cold: 0 };
-  t.solved++;
-  if (clean) { t.clean++; t.streak++; } else { t.streak = 0; }
-  if (t.bestMs === null || ms < t.bestMs) t.bestMs = ms;
+  const t = s[tier] || { solved: 0, clean: 0, streak: 0, bestMs: null, cold: 0, assisted: 0 };
+  if (assisted) {
+    // A helped solve is a lesser result: counted apart, no streak, no best time.
+    t.assisted = (t.assisted || 0) + 1;
+    t.streak = 0;
+  } else {
+    t.solved++;
+    if (clean) { t.clean++; t.streak++; } else { t.streak = 0; }
+    if (t.bestMs === null || ms < t.bestMs) t.bestMs = ms;
+  }
   s[tier] = t;
   try { localStorage.setItem('cellmates-stats', JSON.stringify(s)); } catch { /* private mode */ }
   return t;
@@ -96,6 +105,9 @@ function newCase(tierKey, seedCode) {
     game.puzzle = p;
     game.poolLetters = maskLetters(p.poolMask);
     game.wrong = 0;
+    game.checks = 0;
+    game.reveals = 0;
+    game.assisted = false;
     game.done = false;
     renderPuzzle();
     startTimer();
@@ -125,7 +137,18 @@ function renderPuzzle() {
 
     const head = el('div', 'card-head');
     head.appendChild(el('span', 'mug-num', `INMATE NO. ${i + 1}`));
-    head.appendChild(el('span', 'mug-len', `${L} LETTERS`));
+    head.appendChild(el('span', 'verdict'));
+    const tools = el('span', 'head-right');
+    tools.appendChild(el('span', 'mug-len', `${L} LETTERS`));
+    const checkB = el('button', 'tool-btn check-word', 'Check');
+    checkB.dataset.i = i;
+    checkB.title = 'Verify this name — marks the case as an assisted escape';
+    const revealB = el('button', 'tool-btn reveal-word', 'Reveal');
+    revealB.dataset.i = i;
+    revealB.title = 'Reveal this name — marks the case as an assisted escape';
+    tools.appendChild(checkB);
+    tools.appendChild(revealB);
+    head.appendChild(tools);
     card.appendChild(head);
 
     const slots = el('div', 'slots');
@@ -177,6 +200,51 @@ function renderPuzzle() {
   }
 }
 
+/* ---------- assists: check or reveal a single word ---------- */
+
+// First assist in a case asks for consent; after that, help flows freely.
+function withAssistConsent(run) {
+  if (game.assisted) { run(); return; }
+  showSheet(`<div class="stamp amber">CALL FOR HELP?</div>
+    <p class="meta">Checking or revealing a name marks this whole case as an
+    <strong>assisted escape</strong> — no clean badge, your streak resets, and
+    it won't count toward your escape record.</p>
+    <div class="btns">
+      <button id="aloneBtn">Keep working alone</button>
+      <button id="helpBtn">Take the help</button>
+    </div>`);
+  $id('aloneBtn').onclick = hideSheet;
+  $id('helpBtn').onclick = () => { game.assisted = true; hideSheet(); run(); };
+}
+
+function setVerdict(i, text, cls) {
+  const v = document.querySelector(`.card[data-i="${i}"] .verdict`);
+  if (v) { v.textContent = text; v.className = 'verdict' + (cls ? ' ' + cls : ''); }
+}
+
+function checkWord(i) {
+  const entry = currentEntries()[i];
+  if (entry.includes(' ')) { setVerdict(i, 'FILL EVERY SLOT FIRST', 'info'); return; }
+  withAssistConsent(() => {
+    game.checks++;
+    const right = entry === game.puzzle.solution[i];
+    setVerdict(i, right ? 'CONFIRMED' : 'NOT THE ONE', right ? 'ok' : 'bad');
+  });
+}
+
+function revealWord(i) {
+  withAssistConsent(() => {
+    game.reveals++;
+    const w = game.puzzle.solution[i];
+    document.querySelectorAll(`.slot[data-i="${i}"]`).forEach((s, k) => {
+      s.value = w[k].toUpperCase();
+      s.readOnly = true;
+    });
+    setVerdict(i, 'REVEALED', 'info');
+    document.querySelectorAll(`.tool-btn[data-i="${i}"]`).forEach((b) => { b.disabled = true; });
+  });
+}
+
 /* ---------- submission ---------- */
 
 function currentEntries() {
@@ -211,23 +279,28 @@ function submit() {
   game.done = true;
   clearInterval(game.timerId);
   const ms = Date.now() - game.startAt;
-  const clean = game.wrong === 0;
-  const t = recordWin(game.puzzle.tier, ms, clean);
+  const assisted = game.assisted;
+  const clean = game.wrong === 0 && !assisted;
+  const t = recordWin(game.puzzle.tier, ms, clean, assisted);
 
+  const helpNote = assisted
+    ? ` &middot; helped out (${game.checks} check${game.checks === 1 ? '' : 's'}, ${game.reveals} revealed)`
+    : clean ? ' &middot; CLEAN ESCAPE'
+    : ` &middot; ${game.wrong} denied attempt${game.wrong === 1 ? '' : 's'}`;
   const mugs = game.puzzle.solution.map((w, i) =>
     `<span class="mug"><span class="n">NO. ${i + 1}</span><br><span class="w">${w.toUpperCase()}</span></span>`).join('');
-  showSheet(`<div class="stamp green">ESCAPED</div>
+  showSheet(`<div class="stamp ${assisted ? 'amber' : 'green'}">${assisted ? 'ESCAPED &middot; ASSISTED' : 'ESCAPED'}</div>
     <div class="reveal">${mugs}</div>
-    <p class="meta">${game.puzzle.tierName} &middot; case ${game.puzzle.seed} &middot; out in ${fmtTime(ms)}
-    ${clean ? '&middot; CLEAN ESCAPE' : `&middot; ${game.wrong} denied attempt${game.wrong === 1 ? '' : 's'}`}<br>
+    <p class="meta">${game.puzzle.tierName} &middot; case ${game.puzzle.seed} &middot; out in ${fmtTime(ms)}${helpNote}<br>
     tier record: ${t.solved} escaped &middot; ${t.clean} clean &middot; streak ${t.streak}
-    &middot; best ${fmtTime(t.bestMs)} &middot; ${t.cold || 0} cold</p>
+    &middot; best ${t.bestMs === null ? '&mdash;' : fmtTime(t.bestMs)}
+    &middot; ${t.assisted || 0} assisted &middot; ${t.cold || 0} cold</p>
     <div class="btns">
       <button id="shareBtn">Copy brag sheet</button>
       <button id="againBtn">New case</button>
     </div>`);
   $id('shareBtn').onclick = () => {
-    const txt = `CELLMATES · ${game.puzzle.tierName} · case ${game.puzzle.seed} · escaped in ${fmtTime(ms)}${clean ? ' · CLEAN ESCAPE' : ''}`;
+    const txt = `CELLMATES · ${game.puzzle.tierName} · case ${game.puzzle.seed} · escaped in ${fmtTime(ms)}${clean ? ' · CLEAN ESCAPE' : assisted ? ' · assisted' : ''}`;
     (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
       .then(() => { $id('shareBtn').textContent = 'Copied'; })
       .catch(() => { $id('shareBtn').textContent = txt; });
@@ -315,13 +388,16 @@ function wire() {
   $id('checkBtn').onclick = doCheck;
   $id('checkInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') doCheck(); });
 
-  // Slots: typing, auto-advance, backspace navigation.
+  // Slots: typing, auto-advance, backspace navigation (skipping revealed letters).
+  const slotAt = (i, k) => document.querySelector(`.slot[data-i="${i}"][data-k="${k}"]`);
   $id('inmates').addEventListener('input', (e) => {
     const s = e.target;
     if (!s.classList.contains('slot')) return;
     s.value = s.value.replace(/[^a-zA-Z]/g, '').toUpperCase();
+    setVerdict(s.dataset.i, '', '');
     if (s.value) {
-      const next = document.querySelector(`.slot[data-i="${s.dataset.i}"][data-k="${+s.dataset.k + 1}"]`);
+      let next = slotAt(s.dataset.i, +s.dataset.k + 1);
+      while (next && next.readOnly) next = slotAt(s.dataset.i, +next.dataset.k + 1);
       if (next) next.focus();
     }
   });
@@ -329,15 +405,21 @@ function wire() {
     const s = e.target;
     if (!s.classList.contains('slot')) return;
     if (e.key === 'Backspace' && !s.value) {
-      const prev = document.querySelector(`.slot[data-i="${s.dataset.i}"][data-k="${+s.dataset.k - 1}"]`);
-      if (prev) { prev.focus(); prev.value = ''; e.preventDefault(); }
+      let prev = slotAt(s.dataset.i, +s.dataset.k - 1);
+      while (prev && prev.readOnly) prev = slotAt(s.dataset.i, +prev.dataset.k - 1);
+      if (prev) { prev.focus(); prev.value = ''; setVerdict(s.dataset.i, '', ''); e.preventDefault(); }
     }
   });
 
-  // Letter-status marks: cycle unknown → in → out → maybe.
+  // Letter-status marks and per-word assists.
   $id('inmates').addEventListener('click', (e) => {
     const b = e.target.closest('.mark');
     if (b) b.dataset.state = String((+b.dataset.state + 1) % 4);
+    const t = e.target.closest('.tool-btn');
+    if (t && !game.done && !t.disabled) {
+      if (t.classList.contains('check-word')) checkWord(+t.dataset.i);
+      else revealWord(+t.dataset.i);
+    }
   });
 
   // Clue hover highlights the inmates and letters it mentions.

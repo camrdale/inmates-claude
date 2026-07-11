@@ -221,6 +221,33 @@ button { cursor: pointer; }
 
 .mug-num { font-size: 15px; color: var(--ink); }
 
+.head-right { display: flex; gap: 6px; align-items: baseline; }
+
+.tool-btn {
+  font-family: var(--type);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid #a89a76;
+  border-radius: 2px;
+  color: var(--ink-soft);
+  padding: 2px 8px 1px;
+}
+.tool-btn:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-soft); }
+.tool-btn:disabled { opacity: 0.4; cursor: default; }
+
+.verdict {
+  font-family: var(--type);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  flex: 1;
+  text-align: center;
+}
+.verdict.ok { color: var(--stamp-green); }
+.verdict.bad { color: var(--stamp-red); }
+.verdict.info { color: #8a6a12; }
+
 /* answer slots on a mugshot height chart */
 .slots {
   display: flex;
@@ -248,6 +275,15 @@ button { cursor: pointer; }
 }
 
 .slot:focus { border-color: var(--amber-dim); background: #f9f2df; }
+
+/* letters handed over by the guards */
+.slot[readonly] {
+  background: #f9ecc4;
+  border-style: dashed;
+  border-bottom-style: solid;
+  border-color: var(--amber-dim);
+  color: #6b5a2a;
+}
 
 /* letter status marks */
 .marks { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 2px; }
@@ -527,6 +563,7 @@ button { cursor: pointer; }
 }
 
 .stamp.green { color: var(--stamp-green); border-color: var(--stamp-green); }
+.stamp.amber { color: #8a6a12; border-color: var(--amber-dim); }
 
 .reveal {
   display: flex;
