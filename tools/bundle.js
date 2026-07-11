@@ -23,18 +23,36 @@ const js = MODULES.map((m) =>
 
 const body = read('index.html').match(/<!-- BODY-START -->([\s\S]*)<!-- BODY-END -->/)[1];
 
-const out = `<title>Cellmates</title>
+// Default output is a headless fragment (the Artifact host adds the page
+// skeleton); --full wraps it into a complete standalone document.
+const full = process.argv.includes('--full');
+
+const head = `<title>Cellmates</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 ${read('fonts.css')}
 ${read('styles.css')}
-</style>
-${body}
+</style>`;
+
+const tail = `${body}
 <script>
 ${js}
 </script>
 `;
 
-const dest = process.argv[2] || join(root, 'dist-cellmates.html');
+const out = full
+  ? `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+${head}
+</head>
+<body>
+${tail}</body>
+</html>
+`
+  : `${head}\n${tail}`;
+
+const dest = process.argv.slice(2).find((a) => !a.startsWith('--')) || join(root, 'dist-cellmates.html');
 writeFileSync(dest, out);
 console.log(`wrote ${dest} (${(out.length / 1024).toFixed(0)} KB)`);
