@@ -208,6 +208,7 @@ function renderPuzzle() {
     k.appendChild(back);
     k.hidden = true;
     activeSlot = null;
+    updateKeyUsage();
   }
 
   const list = $id('clues');
@@ -244,6 +245,19 @@ function withAssistConsent(run) {
   $id('helpBtn').onclick = () => { game.assisted = true; hideSheet(); run(); };
 }
 
+// Coverage aid: keypad keys glow while their letter appears in no inmate yet
+// (the standing rule says every pool letter must find a home).
+function updateKeyUsage() {
+  if (!KEYPAD_MODE) return;
+  const used = new Set();
+  document.querySelectorAll('.slot').forEach((s) => {
+    if (s.value) used.add(s.value.toLowerCase());
+  });
+  document.querySelectorAll('.key[data-letter]').forEach((b) => {
+    b.classList.toggle('unused', !used.has(b.dataset.letter));
+  });
+}
+
 function setVerdict(i, text, cls) {
   const v = document.querySelector(`.card[data-i="${i}"] .verdict`);
   if (v) { v.textContent = text; v.className = 'verdict' + (cls ? ' ' + cls : ''); }
@@ -269,6 +283,7 @@ function revealWord(i) {
     });
     setVerdict(i, 'REVEALED', 'info');
     document.querySelectorAll(`.tool-btn[data-i="${i}"]`).forEach((b) => { b.disabled = true; });
+    updateKeyUsage();
   });
 }
 
@@ -438,6 +453,7 @@ function wire() {
     if (!s.classList.contains('slot')) return;
     s.value = s.value.replace(/[^a-zA-Z]/g, '').toUpperCase();
     setVerdict(s.dataset.i, '', '');
+    updateKeyUsage();
     if (s.value) {
       let next = slotAt(s.dataset.i, +s.dataset.k + 1);
       while (next && next.readOnly) next = slotAt(s.dataset.i, +next.dataset.k + 1);
@@ -450,7 +466,7 @@ function wire() {
     if (e.key === 'Backspace' && !s.value) {
       let prev = slotAt(s.dataset.i, +s.dataset.k - 1);
       while (prev && prev.readOnly) prev = slotAt(s.dataset.i, +prev.dataset.k - 1);
-      if (prev) { prev.focus(); prev.value = ''; setVerdict(s.dataset.i, '', ''); e.preventDefault(); }
+      if (prev) { prev.focus(); prev.value = ''; setVerdict(s.dataset.i, '', ''); updateKeyUsage(); e.preventDefault(); }
     }
   });
 
@@ -483,6 +499,7 @@ function wire() {
             setVerdict(prev.dataset.i, '', '');
           }
         }
+        updateKeyUsage();
       } else {
         activeSlot.value = b.dataset.letter.toUpperCase();
         activeSlot.dispatchEvent(new Event('input', { bubbles: true }));

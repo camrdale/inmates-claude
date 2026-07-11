@@ -521,6 +521,23 @@ button { cursor: pointer; }
 
 .dock .key:active { background: var(--amber); border-color: var(--amber); color: #241a03; }
 
+/* Letters that appear in no inmate yet — the coverage rule says they must. */
+.dock .key.unused {
+  position: relative;
+  color: var(--amber);
+  border-color: var(--amber-dim);
+}
+.dock .key.unused::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--amber);
+}
+
 .dock .key-back { min-width: 64px; font-family: var(--ui); font-size: 18px; }
 
 .dock input[type="text"], .dock select {
