@@ -14,6 +14,13 @@ const el = (tag, cls, text) => {
   return e;
 };
 
+// Touch devices get a custom keypad of pool letters instead of the huge OS
+// keyboard (slots take only pool letters anyway). ?keypad=1 forces it for
+// desktop testing.
+const KEYPAD_MODE = matchMedia('(pointer: coarse)').matches ||
+  new URLSearchParams(location.search).has('keypad');
+let activeSlot = null;
+
 const game = {
   puzzle: null,
   poolLetters: [],
@@ -159,6 +166,7 @@ function renderPuzzle() {
       const inp = el('input', 'slot');
       inp.maxLength = 1;
       inp.autocomplete = 'off';
+      if (KEYPAD_MODE) inp.inputMode = 'none';
       inp.setAttribute('aria-label', `Inmate ${i + 1}, letter ${k + 1}`);
       inp.dataset.i = i;
       inp.dataset.k = k;
@@ -185,6 +193,22 @@ function renderPuzzle() {
 
     inmates.appendChild(card);
   });
+
+  if (KEYPAD_MODE) {
+    const k = $id('keypad');
+    k.innerHTML = '';
+    for (const x of game.poolLetters) {
+      const b = el('button', 'key', x.toUpperCase());
+      b.dataset.letter = x;
+      k.appendChild(b);
+    }
+    const back = el('button', 'key key-back', '⌫');
+    back.dataset.action = 'back';
+    back.setAttribute('aria-label', 'Delete letter');
+    k.appendChild(back);
+    k.hidden = true;
+    activeSlot = null;
+  }
 
   const list = $id('clues');
   list.innerHTML = '';
@@ -429,6 +453,42 @@ function wire() {
       if (prev) { prev.focus(); prev.value = ''; setVerdict(s.dataset.i, '', ''); e.preventDefault(); }
     }
   });
+
+  // Custom keypad: show while a slot is active, type via pool letters.
+  if (KEYPAD_MODE) {
+    document.addEventListener('focusin', (e) => {
+      const t = e.target;
+      if (t.classList && t.classList.contains('slot') && !t.readOnly) {
+        activeSlot = t;
+        $id('keypad').hidden = false;
+      } else if (!(t.closest && t.closest('#keypad'))) {
+        $id('keypad').hidden = true;
+      }
+    });
+    $id('keypad').addEventListener('pointerdown', (e) => {
+      const b = e.target.closest('.key');
+      if (!b) return;
+      e.preventDefault(); // keep focus (and the caret) on the slot
+      if (!activeSlot || !activeSlot.isConnected || activeSlot.readOnly) return;
+      if (b.dataset.action === 'back') {
+        if (activeSlot.value) {
+          activeSlot.value = '';
+          setVerdict(activeSlot.dataset.i, '', '');
+        } else {
+          let prev = slotAt(activeSlot.dataset.i, +activeSlot.dataset.k - 1);
+          while (prev && prev.readOnly) prev = slotAt(activeSlot.dataset.i, +prev.dataset.k - 1);
+          if (prev) {
+            prev.focus();
+            prev.value = '';
+            setVerdict(prev.dataset.i, '', '');
+          }
+        }
+      } else {
+        activeSlot.value = b.dataset.letter.toUpperCase();
+        activeSlot.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+  }
 
   // Letter-status marks and per-word assists.
   $id('inmates').addEventListener('click', (e) => {

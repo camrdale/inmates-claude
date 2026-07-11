@@ -489,6 +489,37 @@ button { cursor: pointer; }
 
 #dockToggle { display: none; }
 
+/* Pool-letter keypad (touch devices): replaces the OS keyboard for slots. */
+.keypad {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--steel);
+}
+
+.keypad[hidden] { display: none; }
+
+.key {
+  min-width: 46px;
+  height: 48px;
+  flex: 0 0 auto;
+  font-family: var(--display);
+  font-size: 21px;
+  color: #cfd9e6;
+  background: linear-gradient(180deg, var(--night-3), var(--night-2));
+  border: 1px solid #4d5b70;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 #ffffff14, 0 2px 4px #0007;
+  padding: 0;
+}
+
+.key:active { background: var(--amber); border-color: var(--amber); color: #241a03; }
+
+.key-back { min-width: 64px; font-family: var(--ui); font-size: 18px; }
+
 .dock input[type="text"], .dock select {
   background: var(--night-2);
   border: 1px solid #4d5b70;
